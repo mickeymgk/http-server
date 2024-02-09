@@ -66,10 +66,26 @@ int main() {
         return 1;
     }
 
+    char *buffer_copy = strdup(buffer);
     char *path = strtok(buffer, " ");
     path = strtok(NULL, " ");
 
-    if (strncmp(path, "/echo/", 6) == 0) {
+    if (strcmp(path, "/user-agent") == 0) {
+        printf("UA BUFFER:\n%s\n", buffer_copy);
+        char *user_agent = strstr(buffer_copy, "User-Agent: ");
+        if (user_agent != NULL) {
+            user_agent += strlen("User-Agent: ");
+            char *end_of_user_agent = strstr(user_agent, "\r\n");
+            if (end_of_user_agent != NULL) {
+                *end_of_user_agent = '\0';
+                const char *response_format = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %zu\r\n\r\n%s";
+                char response[BUFFER_SIZE];
+                sprintf(response, response_format, strlen(user_agent), user_agent);
+                send(client_socket, response, strlen(response), 0);
+            }
+        }
+        free(buffer_copy); // why not free duplicates?
+    } else if (strncmp(path, "/echo/", 6) == 0) {
         char *echo_string = path + 6;
         char response[1024];
         sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %ld\r\n\r\n%s", strlen(echo_string), echo_string);
