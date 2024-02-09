@@ -10,7 +10,7 @@
 #define BUFFER_SIZE 1024
 
 int main() {
-   // Disable output buffering
+    // Disable output buffering
     setbuf(stdout, NULL);
 
     // You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -69,7 +69,12 @@ int main() {
     char *path = strtok(buffer, " ");
     path = strtok(NULL, " ");
 
-    if (strcmp(path, "/") == 0) {
+    if (strncmp(path, "/echo/", 6) == 0) {
+        char *echo_string = path + 6;
+        char response[1024];
+        sprintf(response, "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: %ld\r\n\r\n%s", strlen(echo_string), echo_string);
+        send(client_socket, response, strlen(response), 0);
+    } else if (strcmp(path, "/") == 0) {
         const char *response = "HTTP/1.1 200 OK\r\n\r\n";
         send(client_socket, response, strlen(response), 0);
     } else {
