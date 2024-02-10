@@ -30,7 +30,25 @@ void* handle_connection(void *arg) {
     char *path = strtok(buffer, " ");
     path = strtok(NULL, " ");
 
-    if (strncmp(path, "/files/", 7) == 0) {
+    if (strncmp(path, "/files/", 7) == 0 && strcmp(buffer, "POST") == 0) {
+        char *filename = path + 7;
+
+        char filepath[BUFFER_SIZE];
+        snprintf(filepath, sizeof(filepath), "%s%s", directory, filename);
+
+        char *content = strstr(buffer_copy, "\r\n\r\n");
+        if (content != NULL) {
+            content += 4; // Skip "\r\n\r\n"
+            size_t content_length = bytes_received - (content+1 - buffer);
+            
+            FILE *file_ptr = fopen(filepath, "w");
+            fprintf(file_ptr, content);
+            fclose(file_ptr);
+
+            const char *response = "HTTP/1.1 201 Accepted\r\n\r\n";
+            send(client_socket, response, strlen(response), 0);
+        }
+    } else if (strncmp(path, "/files/", 7) == 0 && strcmp(buffer, "GET") == 0) {
         char *filename = path + 7;
 
         char filepath[BUFFER_SIZE];
